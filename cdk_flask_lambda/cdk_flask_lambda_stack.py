@@ -1,7 +1,10 @@
+import os
+
 from aws_cdk import (
-    # Duration,
+    Duration,
     Stack,
-    # aws_sqs as sqs,
+    aws_lambda as _lambda,
+    aws_apigateway as apigw,
 )
 from constructs import Construct
 
@@ -12,8 +15,15 @@ class CdkFlaskLambdaStack(Stack):
 
         # The code that defines your stack goes here
 
-        # example resource
-        # queue = sqs.Queue(
-        #     self, "CdkFlaskLambdaQueue",
-        #     visibility_timeout=Duration.seconds(300),
-        # )
+        flask_handler = _lambda.Function(
+            self, 'FlaskHandler',
+            runtime=_lambda.Runtime.PYTHON_3_7,
+            code=_lambda.Code.asset('lambda/'+ os.environ['ZAPPA_LAMBDA_PACKAGE']),
+            handler='handler.lambda_handler',
+            timeout=Duration.seconds(15),
+        )
+
+        apigw.LambdaRestApi(
+            self, 'Endpoint',
+            handler=flask_handler,
+        )
